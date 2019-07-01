@@ -71,9 +71,15 @@ def le_arquivo(arquivo):
 	
 	sair = True
 	while sair:
-		palavra = input('Palavra a ser processada: ')
-		resultado = processa_palavraAFN(lista_estados, palavra)
-		print('A palavra', palavra, resultado, 'pelo', tipo[0])
+		qtd = input('Quantidade de palavra a ser processada: ')
+		palavras = list()
+		for index in range(0, int(qtd)):
+			palavras.append(input('Digite a palavra: '))
+
+		for index in range(0, int(qtd)):
+			resultado = processa_palavraAFN(lista_estados, palavras[index])
+			print('A palavra', palavras[index], resultado, 'pelo', tipo_do_automato(tipo[0]))
+	
 		i = input('Sair? (S/N) ')
 		sair = (False) if i.upper() == 'S' else (True)
 
@@ -89,6 +95,14 @@ def criar_estados(qtd_estados):
 		estados.append(Estado(nome))
 
 	return estados
+
+def tipo_do_automato(tipo):
+	if tipo == 'ap':
+		return 'autômato com pilha'
+	elif tipo == 'afd':
+		return 'autômato determinístico'
+	elif tipo == 'afn':
+		return 'autômato não determinístico'
 
 def setTransicaoAFD(lista_estados, alfabeto):
 	"""
@@ -282,7 +296,7 @@ def processa_palavraAFD(lista_estados, palavra):
 	return 'não é aceita'
 
 def processa_palavraAFN(lista_de_estados, palavra):
-	pilha = []
+	pilha = str()
 	e_atual = Estado('a')
 	# Busca o estado inicial
 	for e in lista_de_estados:
@@ -305,14 +319,7 @@ def processa_palavraAFN(lista_de_estados, palavra):
 	
 	# Percorrendo a palavra
 	for simb in palavra:
-		#
-		print('\nEstados ativos: ',end='')
-		for e in e_ativos:
-			print(e.nome,'', end='')
-		print()
-		#
 		for e_atual in e_ativos:
-			print(e_atual.nome,'Lendo:',simb)
 
 			# Acrescentado os estados a serem ativados
 			# Se estado atual possuir transições
@@ -320,10 +327,9 @@ def processa_palavraAFN(lista_de_estados, palavra):
 				# Se possuir transição *
 				if e_atual.transicao['*'] is not None:
 					nome_estado = e_atual.transicao['*'][0]
-					print('Transição * =>', nome_estado)
 					for prox_estado in nome_estado:
 						for e in lista_de_estados:
-							if e.nome == prox_estado:
+							if e.nome == prox_estado and fila_prox.count(e) == 0:
 								fila_prox.append(e)
 				
 				# Se possuir transição referente ao símbolo lido
@@ -332,10 +338,9 @@ def processa_palavraAFN(lista_de_estados, palavra):
 					keys_da_transicao.append(i)
 				if keys_da_transicao.count(simb) != 0:
 					nome_estado = e_atual.transicao[simb][0]
-					print('Transição', simb,'=>', nome_estado)
 					for prox_estado in nome_estado:
 						for e in lista_de_estados:
-							if e.nome == prox_estado:
+							if e.nome == prox_estado and fila_prox.count(e) == 0:
 								fila_prox.append(e)
 
 					# Desempilhar
@@ -345,20 +350,20 @@ def processa_palavraAFN(lista_de_estados, palavra):
 						if(len(pilha) > 0):
 							#Se o valor para desempilhar for igual ao topo da pilha
 							if(e_atual.transicao[simb][1] == pilha[-1]):
-								pilha.pop()
+								pilha = pilha[:-1]
 						else:
 							return 'não é aceita'
 
 					# Empilha o que não for *
 					if(e_atual.transicao[simb][2] != '*'):
-						pilha.append(e_atual.transicao[simb][2])
+						pilha += e_atual.transicao[simb][2][0]
 
-				print('Pilha:', pilha)
 			# Copiando a tlista de próximos estados para estados ativos
 		e_ativos = fila_prox.copy()
 		fila_prox.clear()
 
 	# Adicionando os estados ativáveis por movimento vazio a partir dos estados finais
+	#print('Estados ativos no final:', e_ativos)
 	e_finais = []
 	for e in e_ativos:
 		if len(e.transicao) > 0:

@@ -19,6 +19,7 @@ def main():
 		automatos.le_arquivo(arquivo)
 	except IndexError:
 		i = True
+		print('aki')
 		alfabeto = input('Entre com o alfabeto: ')
 		qtd_estados = int(input('Digite a quantidade de estados: '))
 		lista_estados = automatos.criar_estados(qtd_estados)
