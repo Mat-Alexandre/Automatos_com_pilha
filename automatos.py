@@ -24,22 +24,17 @@ def le_arquivo(arquivo):
 	*Estado final
 	*Transições
 
-	As transições devem respeitar a seguinte configuração:
-	Origem Símbolo Destino (para AFD)
-	ex.: q0 0 q0
-
-	Origem Símbolo Destinos (para AFN)
-	ex.: q0 a q1 q2
-
-	Caso determinado estado não processe um síbolo, não é
+	Caso determinado estado não processe um símbolo, não é
 	necessário especificar a transição no arquivo. Caso o
 	seja feito, deve seguir o exemplo.
 	ex.: 'q0 b '
 	"""
+
 	with open(arquivo, 'r') as f:
 		tipo = f.readline().split()
 		qtd_estados = f.readline().split()
-		alfabeto = f.readline().split()
+		alfabeto = f.readline().split()[0]
+		alfabeto += '*'	# Inclusão da palavra vazia
 		lista_estados = criar_estados(int(qtd_estados[0]))
 
 		# definindo estado inicial
@@ -55,8 +50,6 @@ def le_arquivo(arquivo):
 				e.final = True
 
 		# recebendo todas as transições
-		# transicao = f.readline().split()
-		# q0 a * B q0
 		# [0] = estado; [1] = simbolo; [2] = desempilha; [3] = empilha; [4:] = destinos
 		for transicao in f:
 			tupla = ()
@@ -66,7 +59,6 @@ def le_arquivo(arquivo):
 					tupla = ((t[4:], t[2], t[3]))
 					# exemplo: (['q0'], '*', 'B') 
 					e.transicao.update({t[1]: tupla})
-				#print(e.transicao)
 	f.close()
 	
 	sair = True
@@ -74,10 +66,10 @@ def le_arquivo(arquivo):
 		qtd = input('Quantidade de palavra a ser processada: ')
 		palavras = list()
 		for index in range(0, int(qtd)):
-			palavras.append(input('Digite a palavra: '))
+			palavras.append(getPalavra(alfabeto))
 
 		for index in range(0, int(qtd)):
-			resultado = processa_palavraAFN(lista_estados, palavras[index])
+			resultado = processa_palavra(lista_estados, palavras[index])
 			print('A palavra', palavras[index], resultado, 'pelo', tipo_do_automato(tipo[0]))
 	
 		i = input('Sair? (S/N) ')
@@ -97,6 +89,9 @@ def criar_estados(qtd_estados):
 	return estados
 
 def tipo_do_automato(tipo):
+	"""
+	Retorna uma string conforme o tipo de autômato no arquivo.
+	"""
 	if tipo == 'ap':
 		return 'autômato com pilha'
 	elif tipo == 'afd':
@@ -208,94 +203,7 @@ def getPalavra(alfabeto):
 				i = False
 	return palavra
 
-def processa_palavra(pilha, lista_estados, palavra):
-	"""
-	Procura o estado inicial na lista de estados e o adiciona à lista
-	de estados ativos.
-	Para cada símbolo da palavra a ser processada, enquanto existirem
-	estados ativos, verificar se o símbolo leva à algum estado. Se levar,
-	adicioná-lo à fila de processamento, que, posteriormente, será incorporada
-	como estados ativos.
-	Se algum estado da lista de estados ativos final possuir o atributo ".final"
-	igual à "True", então a palavra é aceita pelo autômato.
-
-	"""
-	e_atual = None
-	# Procurando o estado inicial
-	for e in lista_estados:
-		if e.inicial == True:
-			e_atual = e
-
-	e_ativos = []
-	e_ativos.append(e_atual)
-	fila_proc = []
-
-	for simb in palavra:
-		while len(e_ativos) > 0:
-			# Verificando se o estado ativado por 'simb' em 'e_atual'
-			# é diferente de vazio. Se sim, colocá-los como estados ativos
-			e_atual = e_ativos.pop()
-			if e_atual.transicao.get(simb) is not None:
-				for nome_estado in e_atual.transicao.get(simb):
-					# Adicionar o elemento q possui o 'nome'especificado
-					for e in lista_estados:
-						if e.nome == nome_estado:
-							fila_proc.append(e)
-		e_ativos = fila_proc.copy()
-		fila_proc.clear()
-
-	for estado in e_ativos:
-		if estado.final == True:
-			return 'é aceita'
-	return 'não é aceita'
-
-def processa_palavraAFD(lista_estados, palavra):
-	"""
-	Procura o estado inicial na lista de estados e o torna estado atual.
-	E, para cada símbolo da palavra, verificar qual estado destino e torná-lo
-	o atual.
-	Se no final da palavra ".final" for "True", então a palavra é aceita pelo
-	autômato.
-	"""
-	pilha = []
-	e_atual = None
-	# Busca o estado inicial
-	for e in lista_estados:
-		if e.inicial == True:
-			e_atual = e
-	# Para cada símbolo da Palavra
-	# verificar qual estado é ativado e torná-lo o estado atual
-	for simb in palavra:
-		nome_prox = e_atual.transicao[simb][0]
-
-		# Se o pedido que é feito para desempilhar não é aceito
-		# a palavra pode ser rejeitada pelo automato
-		if(e_atual.transicao[simb][1] != '*'):
-			#Se tiver algum simbolo na pilha
-			if(len(pilha) > 0):
-				#Se o valor para desempilhar for igual ao topo da pilha
-				if(e_atual.transicao[simb][1] == pilha[-1]):
-					del(pilha[-1])
-				else:
-					return 'não é aceita'
-			else:
-				return 'não é aceita'
-
-		# Empilha 
-		if(e_atual.transicao[simb][2] != '*'):
-			pilha.append(e_atual.transicao[simb][2])
-
-		for e in lista_estados:
-			if e.nome == nome_prox:
-				e_atual = e
-
-	# Se o ultimo estado possuir o atributo '.final' = true, então
-	# a palavra é aceita
-	if(len(pilha) == 0):
-		return 'é aceita' if e_atual.final is True else 'não é aceita'
-	return 'não é aceita'
-
-def processa_palavraAFN(lista_de_estados, palavra):
+def processa_palavra(lista_de_estados, palavra):
 	pilha = str()
 	e_atual = Estado('a')
 	# Busca o estado inicial
@@ -382,4 +290,49 @@ def processa_palavraAFN(lista_de_estados, palavra):
 		for estado in e_finais:
 			if estado.final == True:
 				return 'é aceita'
+	return 'não é aceita'
+
+	"""
+	Procura o estado inicial na lista de estados e o torna estado atual.
+	E, para cada símbolo da palavra, verificar qual estado destino e torná-lo
+	o atual.
+	Se no final da palavra ".final" for "True", então a palavra é aceita pelo
+	autômato.
+	"""
+	pilha = []
+	e_atual = None
+	# Busca o estado inicial
+	for e in lista_estados:
+		if e.inicial == True:
+			e_atual = e
+	# Para cada símbolo da Palavra
+	# verificar qual estado é ativado e torná-lo o estado atual
+	for simb in palavra:
+		nome_prox = e_atual.transicao[simb][0]
+
+		# Se o pedido que é feito para desempilhar não é aceito
+		# a palavra pode ser rejeitada pelo automato
+		if(e_atual.transicao[simb][1] != '*'):
+			#Se tiver algum simbolo na pilha
+			if(len(pilha) > 0):
+				#Se o valor para desempilhar for igual ao topo da pilha
+				if(e_atual.transicao[simb][1] == pilha[-1]):
+					del(pilha[-1])
+				else:
+					return 'não é aceita'
+			else:
+				return 'não é aceita'
+
+		# Empilha 
+		if(e_atual.transicao[simb][2] != '*'):
+			pilha.append(e_atual.transicao[simb][2])
+
+		for e in lista_estados:
+			if e.nome == nome_prox:
+				e_atual = e
+
+	# Se o ultimo estado possuir o atributo '.final' = true, então
+	# a palavra é aceita
+	if(len(pilha) == 0):
+		return 'é aceita' if e_atual.final is True else 'não é aceita'
 	return 'não é aceita'

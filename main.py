@@ -19,7 +19,6 @@ def main():
 		automatos.le_arquivo(arquivo)
 	except IndexError:
 		i = True
-		print('aki')
 		alfabeto = input('Entre com o alfabeto: ')
 		qtd_estados = int(input('Digite a quantidade de estados: '))
 		lista_estados = automatos.criar_estados(qtd_estados)
@@ -32,7 +31,7 @@ def main():
 			automatos.setFinal(lista_estados)
 			while i == True:
 				palavra = automatos.getPalavra(alfabeto)
-				print('A palavra', palavra, automatos.processa_palavraAFD(lista_estados, palavra), 'pelo autômato')
+				print('A palavra', palavra, automatos.processa_palavra(lista_estados, palavra), 'pelo autômato')
 				sair = input('Sair? (S/N) ')
 				i = False if sair.upper() == 'S' else True
 		elif menu.upper() == 'AFN':
